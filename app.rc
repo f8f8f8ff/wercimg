@@ -1,5 +1,6 @@
 fn conf_enable_img {
-	posts_per_page=10 # TODO: make posts_per_page configurable
+	if (~ $#posts_per_page 0)
+		posts_per_page=10
 	img_url=$conf_wd # /
 	img_root=`{pwd} # /var/www/werc/sites/server.local
 	#dprint IMG_ROOT $img_root
@@ -44,7 +45,6 @@ fn img_display_gallery {
 	</form>
 	</article>'
 
-	# TODO: add description, link to gallery
 	# TODO: add edit button/form to delete, edit tags, caption, link
 	get_post_list
 	for (i in `{seq 1 $#posts}){
