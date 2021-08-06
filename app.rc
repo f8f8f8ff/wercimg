@@ -1,19 +1,22 @@
 fn conf_enable_img {
-	img_url=$conf_wd
+	img_url=$conf_wd # /
+	img_root=`{pwd} # /var/www/werc/sites/server.local
+	#dprint IMG_ROOT $img_root
 	if (~ $#img_dir 0) { img_dir=`{pwd} }
 	conf_enable_app img
-
 }
 
 fn img_init {
+	img_items=`{cat $img_root/_werc/img/items}
 	if (~ $req_path $img_url) {
 		if (~ $REQUEST_METHOD GET ) {
 			handler_body_main='img_display_gallery'
 		}
 		if (~ $REQUEST_METHOD POST ) {
 			#now=`{ date -n }
-			if (! ~ $#post_arg_url 0) {
-				echo 'Content-type: text/plain'; echo ''; exec echo $post_arg_url
+			if (! ~ $#post_arg_image 0) {
+				#echo 'Content-type: text/plain'; echo ''; exec echo $post_arg_image
+				edit_post
 			}
 		}
 	}
@@ -23,12 +26,58 @@ fn img_display_gallery {
 	echo '<article>
 	<form action="'$img_url'" method="post">
 		<table>
-		<tr><td>image: </td><td><input type="text" name="url" required></td></tr>
-		<tr><td>description: </td><td><input type="text" name="description" ></td></tr>
+		<tr><td>image: </td><td><input type="text" name="image" required></td></tr>
+		<tr><td>caption: </td><td><input type="text" name="caption" ></td></tr>
 		<tr><td>tags: </td><td><input type="text" name="tags" ></td>
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
 	</form>
 	</article>
 	'
+}
+
+fn edit_post {
+	if (~ $#a_id 0){
+		a_id=`{echo `{ls -p $img_root/src | sort -n | tail -1}^+1 | bc}
+		if (~ $#a_id 0)
+			a_id=1
+		while (test -d $img_root/src/$a_id)
+			a_id=`{echo $a_id^+1 | bc}
+	}
+	a_dir=$img_root/src/$a_id
+
+	dprint EDIT_POST a_id: $a_id
+	dprint EDIT_POST a_dir: $a_dir
+
+	mkdir -p $a_dir/img $a_dir/tags
+
+	# DATE
+	date >$a_dir/date
+
+	# TAGS
+	rm -f $a_dir/tags/*
+	if (! ~ $#post_arg_tags 0){
+		a_tags=`{echo $"post_arg_tags | sed 's/[^A-Za-z0-9_\- ]//g'}
+		# put tags into list
+		ifs=' '{a_tags=`{echo -n $a_tags}}
+		{
+			t=1
+			while (test $t -le $#a_tags){
+				# create tag files
+				>$a_dir/tags/$a_tags($t)
+				t=`{echo $t^+1 | bc}
+			}
+		}
+		for (i in $a_tags)
+			echo $a_id'/tags/'$i >>$img_root/tags
+	}
+
+	# CAPTION
+	# TODO: escape html and all that jazz
+	if (! ~ $#post_arg_caption 0)
+		echo $"post_arg_caption >$a_dir/caption
+
+	# IMAGE
+#	if (! ~ $#post_arg_image 0){
+#	}
 }
