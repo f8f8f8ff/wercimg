@@ -37,6 +37,7 @@ fn img_display_gallery {
 	<form action="'$img_url'" method="post">
 		<table>
 		<tr><td>image: </td><td><input type="text" name="image" required></td></tr>
+		# TODO: add link to form
 		<tr><td>caption: </td><td><input type="text" name="caption" ></td></tr>
 		<tr><td>tags: </td><td><input type="text" name="tags" ></td>
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
@@ -44,6 +45,8 @@ fn img_display_gallery {
 	</form>
 	</article>'
 
+	# TODO: add description, link to gallery
+	# TODO: add edit button/form to delete, edit tags, caption, link
 	get_post_list
 	for (i in `{seq 1 $#posts}){
 		a_id=$posts($i)
@@ -62,6 +65,7 @@ fn img_display_gallery {
 		</div>
 		<br>'
 	}
+	# TODO: next/prev buttons
 }
 
 fn edit_post {
@@ -101,7 +105,7 @@ fn edit_post {
 	}
 
 	# CAPTION
-	# TODO: escape html and all that jazz
+	# TODO: escape html in caption?
 	if (! ~ $#post_arg_caption 0)
 		echo $"post_arg_caption >$a_dir/caption
 
@@ -182,8 +186,9 @@ fn get_post_list{
 					grep -e '^[0-9]*$' |
 					sort -nr |
 					sed -n $start^,^$stop^p
-			if not
+			if not{ # TODO: implement tag sort
 				echo 1
+			}
 		}
 		if (! ~ $posts [0-9]*)
 			posts=()
