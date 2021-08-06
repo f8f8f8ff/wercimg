@@ -8,7 +8,6 @@ fn conf_enable_img {
 }
 
 fn img_init {
-	img_items=`{cat $img_root/_werc/img/items}
 	if (~ $req_path $img_url) {
 		if (~ $REQUEST_METHOD GET ) {
 			handler_body_main='img_display_gallery'
@@ -36,10 +35,10 @@ fn img_display_gallery {
 	echo '<article>
 	<form action="'$img_url'" method="post">
 		<table>
-		<tr><td>image: </td><td><input type="text" name="image" required></td></tr>
-		# TODO: add link to form
-		<tr><td>caption: </td><td><input type="text" name="caption" ></td></tr>
-		<tr><td>tags: </td><td><input type="text" name="tags" ></td>
+		<tr><td>image:</td><td><input type="text" name="image" required></td></tr>
+		<tr><td>link:</td><td><input type="text" name="link" ></td></tr>
+		<tr><td>caption:</td><td><input type="text" name="caption" ></td></tr>
+		<tr><td>tags:</td><td><input type="text" name="tags" ></td>
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
 	</form>
@@ -53,13 +52,15 @@ fn img_display_gallery {
 		a_dir=$img_root/src/$a_id
 		echo '<div id="post">
 		<div id="post_meta">'
+		print_link
 		print_tags
 		echo ' |
 		<span id="post_date">'
 		cat $a_dir/date
 		echo '</span>'
-		echo '</div>
-		<div id="post_img">'
+		echo '</div>'
+		print_caption
+		echo '<div id="post_img">'
 		print_img
 		echo '</div>
 		</div>
@@ -105,9 +106,12 @@ fn edit_post {
 	}
 
 	# CAPTION
-	# TODO: escape html in caption?
-	if (! ~ $#post_arg_caption 0)
-		echo $"post_arg_caption >$a_dir/caption
+	# TODO: escape html in caption + link?
+	echo $"post_arg_caption >$a_dir/caption
+
+	# LINK
+	if (! ~ $#post_arg_link 0)
+		echo $"post_arg_link >$a_dir/link
 
 	# IMAGE
 	if (! ~ $#post_arg_image 0){
@@ -208,6 +212,19 @@ fn get_stop{
 fn get_tags{
 	if(~ $#tags 0)
 		tags=all
+}
+
+fn print_link{
+	if (test -f $a_dir/link){
+		link=`{cat $a_dir/link}
+		echo '<span id="post_link"><a href="'$"link'" target="_b">link</a></span> |'
+	}
+}
+
+fn print_caption{
+	echo '<p id="post_caption">'
+	cat $a_dir/caption
+	echo '</p>'
 }
 
 fn print_tags{
