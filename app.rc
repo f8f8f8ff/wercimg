@@ -33,17 +33,18 @@ fn img_init {
 }
 
 fn img_display_gallery {
-	echo '<article>
-	<form action="'$img_url'" method="post">
-		<table>
-		<tr><td>image:</td><td><input type="text" name="image" required></td></tr>
-		<tr><td>link:</td><td><input type="text" name="link" ></td></tr>
-		<tr><td>caption:</td><td><input type="text" name="caption" ></td></tr>
-		<tr><td>tags:</td><td><input type="text" name="tags" ></td>
-		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
-		</table>
-	</form>
-	</article>'
+	echo '<article>'
+	if (check_user && ! ~ $#logged_user 0){
+		echo '<form action="'$img_url'" method="post">
+			<table>
+			<tr><td>image:</td><td><input type="text" name="image" required></td></tr>
+			<tr><td>link:</td><td><input type="text" name="link" ></td></tr>
+			<tr><td>caption:</td><td><input type="text" name="caption" ></td></tr>
+			<tr><td>tags:</td><td><input type="text" name="tags" ></td>
+			<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
+			</table>
+		</form><br>'
+	}
 
 	# TODO: add edit button/form to delete, edit tags, caption, link
 	get_post_list
@@ -67,6 +68,8 @@ fn img_display_gallery {
 		<br>'
 	}
 	# TODO: next/prev buttons
+
+	echo '</article>'
 }
 
 fn edit_post {
@@ -135,7 +138,7 @@ fn edit_post {
 fn check_img_url{
 	if (! ~ $#post_arg_image 0){
 		post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
-		url_content_type=`{curl $"post_arg_image -I -s | grep 'content-type: image'}
+		url_content_type=`{curl $"post_arg_image -I -s | grep -i 'content-type: image'}
 		#echo 'Content-type: text/plain'; echo ''; exec echo yes $#url_content_type $"url_content_type
 		if (! ~ $#url_content_type 0) {
 			edit_post
