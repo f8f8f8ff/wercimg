@@ -149,21 +149,21 @@ fn check_img_url{
 	}
 }
 
-
-fn load_get_args{ # stolen from barf
+fn load_get_args {
 	if(~ $REQUEST_METHOD GET && ~ $#get_args 0 && ~ $REQUEST_URI *'='*){
 		ifs='&' {
 			a=`{echo $"REQUEST_URI | sed 's/(^\/|#.*$)//g'}
 			for(pair in $a){
 				ifs='=' { pair=`{echo -n $pair} }
-					n='get_arg_'^`{echo $pair(1) | urldecode | tr -cd 'a-zA-Z0-9_'}
-					get_args=( $get_args $n )
-					ifs=() { $n=`{echo -n $pair(2) | urldecode | tr -d ''} }
+				n='get_arg_'^`{echo $pair(1) | url_decode | tr -cd 'a-zA-Z0-9_'}
+				get_args=( $get_args $n )
+				ifs=() { $n=`{echo -n $pair(2) | url_decode | tr -d '^M'} }
 			}
 		}
 		pair=()
 	}
 }
+
 
 fn parse_get_args{ # stolen from barf
 	if(! ~ $#get_arg_a_func 0)
@@ -184,15 +184,19 @@ fn get_post_list{
 	if (~ $id [0-9]*)
 		posts=$id
 	if not {
+		dprint GET_POST_LIST: $tags
 		posts=`{
 			if (~ $tags all)
 				ls -p $img_root/src |
 					grep -e '^[0-9]*$' |
 					sort -nr |
 					sed -n $start^,^$stop^p
-			if not{ # TODO: implement tag sort
-				echo 1
-			}
+			if not
+				grep -e '^.*\/'$tags'$' $img_root/tags |
+					awk -F '/' '{print $1;}' |
+					sort -nr |
+					uniq |
+					sed -n $start^,^$stop^p
 		}
 		if (! ~ $posts [0-9]*)
 			posts=()
