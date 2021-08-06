@@ -1,5 +1,7 @@
 # img
 
+based on [barf](https://code.9front.org/hg/barf), but only handles images
+
 	conf_enable_img
 
 ## TODO
