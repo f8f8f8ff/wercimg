@@ -1,4 +1,5 @@
 fn conf_enable_img {
+	posts_per_page=10
 	img_url=$conf_wd # /
 	img_root=`{pwd} # /var/www/werc/sites/server.local
 	#dprint IMG_ROOT $img_root
@@ -11,6 +12,10 @@ fn img_init {
 	if (~ $req_path $img_url) {
 		if (~ $REQUEST_METHOD GET ) {
 			handler_body_main='img_display_gallery'
+			if (~ $REQUEST_URI *'='*){
+				load_get_args
+				parse_get_args
+			}
 		}
 		if (~ $REQUEST_METHOD POST ) {
 			#now=`{ date -n }
@@ -21,6 +26,10 @@ fn img_init {
 			}
 		}
 	}
+
+	get_start
+	get_stop
+	get_tags
 }
 
 fn img_display_gallery {
@@ -33,8 +42,26 @@ fn img_display_gallery {
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
 	</form>
-	</article>
-	'
+	</article>'
+
+	get_post_list
+	for (i in `{seq 1 $#posts}){
+		a_id=$posts($i)
+		a_dir=$img_root/src/$a_id
+		echo '<div id="post">
+		<div id="post_meta">'
+		print_tags
+		echo ' |
+		<span id="post_date">'
+		cat $a_dir/date
+		echo '</span>'
+		echo '</div>
+		<div id="post_img">'
+		print_img
+		echo '</div>
+		</div>
+		<br>'
+	}
 }
 
 fn edit_post {
@@ -93,6 +120,8 @@ fn edit_post {
 		curl $"a_img -s -o $img
 		convert $img -resize 500x600 $thumb
 	}
+
+	post_redirect $base_url^$img_url
 }
 
 fn check_img_url{
@@ -110,4 +139,85 @@ fn check_img_url{
 	if not{
 		echo 'Content-type: text/plain'; echo ''; exec echo no url supplied
 	}
+}
+
+
+fn load_get_args{ # stolen from barf
+	if(~ $REQUEST_METHOD GET && ~ $#get_args 0 && ~ $REQUEST_URI *'='*){
+		ifs='&' {
+			a=`{echo $"REQUEST_URI | sed 's/(^\/|#.*$)//g'}
+			for(pair in $a){
+				ifs='=' { pair=`{echo -n $pair} }
+					n='get_arg_'^`{echo $pair(1) | urldecode | tr -cd 'a-zA-Z0-9_'}
+					get_args=( $get_args $n )
+					ifs=() { $n=`{echo -n $pair(2) | urldecode | tr -d ''} }
+			}
+		}
+		pair=()
+	}
+}
+
+fn parse_get_args{ # stolen from barf
+	if(! ~ $#get_arg_a_func 0)
+		a_func=$get_arg_a_func
+	if(! ~ $#get_arg_a_id 0)
+		a_id=$get_arg_a_id
+	if(! ~ $#get_arg_id 0)
+		id=$get_arg_id
+	if(! ~ $#get_arg_start 0)
+		start=$get_arg_start
+	if(! ~ $#get_arg_stop 0)
+		stop=$get_arg_stop
+	if(! ~ $#get_arg_tags 0)
+		tags=$get_arg_tags
+}
+
+fn get_post_list{
+	if (~ $id [0-9]*)
+		posts=$id
+	if not {
+		posts=`{
+			if (~ $tags all)
+				ls -p $img_root/src |
+					grep -e '^[0-9]*$' |
+					sort -nr |
+					sed -n $start^,^$stop^p
+			if not
+				echo 1
+		}
+		if (! ~ $posts [0-9]*)
+			posts=()
+	}
+}
+
+fn get_start{
+	if(~ $#start 0)
+		start=1
+}
+
+fn get_stop{
+	if(~ $#stop 0)
+		stop=`{echo $start^+^$posts_per_page | bc}
+}
+
+fn get_tags{
+	if(~ $#tags 0)
+		tags=all
+}
+
+fn print_tags{
+	a_tags=`{ls -p $a_dir/tags}
+	a_tags=`{for(t in $a_tags) echo '<a href="'$img_url'?tags='$t'">'$t'</a>, '}
+	a_tags=`{echo $a_tags | awk '{print substr($0, 1, length($0) -1)}'}
+	echo '<span id="post_tags">'$"a_tags'</span>'
+}
+
+fn print_img{
+	a_img=`{ls -p $a_dir/img/[0-9]*}
+	a_thumb=`{ls -p $a_dir/img/small*}
+	if(! ~ $#a_img 0)
+		if(~ $#a_thumb 0)
+			a_thumb=$a_img
+	echo '<a href="'$img_url'src/'$a_id'/img/'$a_img'" target="_b">
+	<img src="'$img_url'src/'$a_id'/img/'$a_thumb'" border="0"></a>'
 }
