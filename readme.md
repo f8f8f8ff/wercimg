@@ -6,6 +6,7 @@
 
 	rg+ -i TODO|mdlist
 
+- app.rc:2:	posts_per_page=10 # TODO: make posts_per_page configurable
 - app.rc:40:		# TODO: add link to form
 - app.rc:48:	# TODO: add description, link to gallery
 - app.rc:49:	# TODO: add edit button/form to delete, edit tags, caption, link
