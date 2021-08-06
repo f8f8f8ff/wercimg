@@ -16,7 +16,8 @@ fn img_init {
 			#now=`{ date -n }
 			if (! ~ $#post_arg_image 0) {
 				#echo 'Content-type: text/plain'; echo ''; exec echo $post_arg_image
-				edit_post
+				#edit_post
+				check_img_url
 			}
 		}
 	}
@@ -78,6 +79,35 @@ fn edit_post {
 		echo $"post_arg_caption >$a_dir/caption
 
 	# IMAGE
-#	if (! ~ $#post_arg_image 0){
-#	}
+	if (! ~ $#post_arg_image 0){
+		a_img=`{echo $"post_arg_image | sed 's/\&.*$//g'}
+		dprint a_img: $"a_img
+		img=$a_dir/img/^`{date -n}^.^`{echo $"a_img |
+			sed 's/^.*\.(gif|GIF)$/gif/g;
+				s/^.*\.(jpg|jpeg|JPG|JPEG)$/jpg/g;
+				s/^.*\.(png|PNG)$/png/g;
+				s/^.*\.(tif|tiff|TIF|TIFF)$/tif/g'
+		}
+		thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
+		dprint a_img: $"a_img
+		curl $"a_img -s -o $img
+		convert $img -resize 500x600 $thumb
+	}
+}
+
+fn check_img_url{
+	if (! ~ $#post_arg_image 0){
+		post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
+		url_content_type=`{curl $"post_arg_image -I -s | grep 'content-type: image'}
+		#echo 'Content-type: text/plain'; echo ''; exec echo yes $#url_content_type $"url_content_type
+		if (! ~ $#url_content_type 0) {
+			edit_post
+		}
+		if not {
+			echo 'Content-type: text/plain'; echo ''; exec echo no image at url: $"post_arg_image
+		}
+	}
+	if not{
+		echo 'Content-type: text/plain'; echo ''; exec echo no url supplied
+	}
 }
