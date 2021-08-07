@@ -113,8 +113,7 @@ fn edit_post {
 	echo $"post_arg_caption >$a_dir/caption
 
 	# LINK
-	if (! ~ $#post_arg_link 0)
-		echo $"post_arg_link >$a_dir/link
+	echo $"post_arg_link >$a_dir/link
 
 	# IMAGE
 	if (! ~ $#post_arg_image 0){
@@ -130,6 +129,7 @@ fn edit_post {
 		dprint a_img: $"a_img
 		curl $"a_img -s -o $img
 		convert $img -resize 500x600 $thumb
+		rm `{ls $a_dir/img/small* | sed -n '2,$p'}
 	}
 
 	post_redirect $base_url^$img_url
@@ -243,10 +243,32 @@ fn print_tags{
 
 fn print_img{
 	a_img=`{ls -p $a_dir/img/[0-9]*}
-	a_thumb=`{ls -p $a_dir/img/small*}
+	a_thumb=`{ls -p $a_dir/img/small*} #| sed 1q
 	if(! ~ $#a_img 0)
 		if(~ $#a_thumb 0)
 			a_thumb=$a_img
 	echo '<a href="'$img_url'src/'$a_id'/img/'$a_img'" target="_b">
 	<img src="'$img_url'src/'$a_id'/img/'$a_thumb'" border="0"></a>'
+}
+
+fn edit_from{
+	if (~ $#a_id 0)
+		name=add
+	if not{
+		name=update
+		a_dir=$img_root/src/$a_id
+		a_img=`{ls -p $a_dir/img | sed 1q}
+		a_tags=`{ls -p $a_dir/tags}
+		a_caption=`{cat $a_dir/caption}
+		a_link=`{cat $a_dir/link}
+	}
+
+	echo '<form action="'$img_url'" method="post">
+		<table>
+		<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>
+		<tr><td>caption:</td><td><input type="text" name="caption" value="'$"a_caption'"></td></tr>
+		<tr><td>tags:</td><td><input type="text" name="tags" value="'$"a_tags'"></td>
+		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
+		</table>
+	</form><br>'
 }
