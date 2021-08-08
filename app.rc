@@ -24,14 +24,14 @@ fn img_init {
 				if (check_user && ! ~ $#logged_user 0)
 					check_img_url
 			}
-			if (~ $a_func edit_post delete_post){
-				if (check_user && ! ~ $#logged_user 0){
-					switch($a_func){
-					case edit_post
-						edit_post
-					case delete_post
-						delete_post
-					}
+		}
+		if (~ $a_func edit_post delete_post){
+			if (check_user && ! ~ $#logged_user 0){
+				switch($a_func){
+				case edit_post
+					edit_post
+				case delete_post
+					delete_post
 				}
 			}
 		}
@@ -108,7 +108,7 @@ fn display_image_gallery{
 fn print_edit_buttons{
 	if (check_user && ! ~ $#logged_user 0){
 		edit='<a href="'$img_url'?a_id='$"a_id'&id='$"a_id'">edit</a>'
-		delete='<a href="'$img_url'">delete</a>'
+		delete='<a href="'$img_url'?a_id='$"a_id'&a_func=delete_post">delete</a>'
 		echo '<br><span id="post_edit">('$"edit', '$"delete')</span>'
 	}
 }
@@ -135,7 +135,8 @@ fn edit_post {
 
 	# TAGS
 	rm -f $a_dir/tags/*
-	sed '/^'$a_id'\//d' $img_root/tags >$img_root/tags
+	{echo ',x/^'$a_id'\/.*\n/d'; echo w; echo q} | sam -d $img_root/tags >[2]/dev/null
+	#dprint `{sed '/^'$a_id'\//d' $img_root/tags} # >$img_root/tags
 	if (! ~ $#post_arg_tags 0){
 		a_tags=`{echo $"post_arg_tags | sed 's/[^A-Za-z0-9_\- ]//g'}
 		# put tags into list
@@ -181,8 +182,10 @@ fn edit_post {
 
 fn delete_post{
 	a_dir=$img_root/src/$a_id
-	rm -r $"a_dir
-	sed '/^'$a_id'\//d' $img_root/tags >$img_root/tags
+	if (test -d $a_dir){
+		rm -rf $"a_dir &&
+		{echo ',x/^'$a_id'\/.*\n/d'; echo w; echo q} | sam -d $img_root/tags >[2]/dev/null
+	}
 }
 
 fn check_img_url{
