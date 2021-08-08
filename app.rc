@@ -15,7 +15,8 @@ fn img_init {
 				load_get_args
 				parse_get_args
 			}
-			handler_body_main='img_display_gallery'
+			#handler_body_main='img_display_gallery'
+			handler_body_main=(tpl_handler `{get_lib_file img/gallery.tpl apps/img/gallery.tpl})
 		}
 		if (~ $REQUEST_METHOD POST ) {
 			parse_post_args
@@ -85,6 +86,29 @@ fn img_display_gallery {
 	}
 	display_prevnext
 	echo '</article>'
+}
+
+fn display_image_gallery{
+	get_post_list
+	for (i in `{seq 1 $#posts}){
+		a_id=$posts($i)
+		a_dir=$img_root/src/$a_id
+		echo '<div id="post">
+		<div id="post_meta">'
+		print_link
+		print_tags
+		echo ' |
+		<span id="post_date">'
+		cat $a_dir/date
+		echo '</span>'
+		echo '</div>'
+		print_caption
+		echo '<div id="post_img">'
+		print_img
+		echo '</div>
+		</div>
+		<br>'
+	}
 }
 
 fn edit_post {
@@ -277,11 +301,11 @@ fn print_img{
 	<img src="'$img_url'src/'$a_id'/img/'$a_thumb'" border="0"></a>'
 }
 
-fn edit_from{
+fn display_edit_form{
 	if (~ $#a_id 0)
-		name=add
+		name=new_post
 	if not{
-		name=update
+		name=edit_post
 		a_dir=$img_root/src/$a_id
 		a_img=`{ls -p $a_dir/img | sed 1q}
 		a_tags=`{ls -p $a_dir/tags}
@@ -290,9 +314,11 @@ fn edit_from{
 	}
 
 	echo '<form action="'$img_url'" method="post">
-		<input type="hidden" name="a_func" value="edit_post">
-		<table>
-		<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>
+		<input type="hidden" name="a_func" value="'$"name'">
+		<table>'
+	if (~ $name new_post)
+		echo '<tr><td>image:</td><td><input type="text" name="image" required></td></tr>'
+	echo '<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>
 		<tr><td>caption:</td><td><input type="text" name="caption" value="'$"a_caption'"></td></tr>
 		<tr><td>tags:</td><td><input type="text" name="tags" value="'$"a_tags'"></td>
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
