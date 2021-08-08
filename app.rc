@@ -1,6 +1,6 @@
 fn conf_enable_img {
 	if (~ $#posts_per_page 0)
-		posts_per_page=10
+		posts_per_page=5
 	img_url=$conf_wd # /
 	img_root=`{pwd} # /var/www/werc/sites/server.local
 	#dprint IMG_ROOT $img_root
@@ -11,11 +11,11 @@ fn conf_enable_img {
 fn img_init {
 	if (~ $req_path $img_url) {
 		if (~ $REQUEST_METHOD GET ) {
-			handler_body_main='img_display_gallery'
 			if (~ $REQUEST_URI *'='*){
 				load_get_args
 				parse_get_args
 			}
+			handler_body_main='img_display_gallery'
 		}
 		if (~ $REQUEST_METHOD POST ) {
 			#now=`{ date -n }
@@ -67,8 +67,7 @@ fn img_display_gallery {
 		</div>
 		<br>'
 	}
-	# TODO: next/prev buttons
-
+	display_prevnext
 	echo '</article>'
 }
 
@@ -187,7 +186,8 @@ fn get_post_list{
 	if (~ $id [0-9]*)
 		posts=$id
 	if not {
-		dprint GET_POST_LIST: $tags
+		# correct $stop... kinda sloppy
+		# dprint GET_POST_LIST: $tags $start $stop
 		posts=`{
 			if (~ $tags all)
 				ls -p $img_root/src |
@@ -204,14 +204,17 @@ fn get_post_list{
 		if (! ~ $posts [0-9]*)
 			posts=()
 	}
+	# dprint GET_POST_LIST: $#posts : $posts
 }
 
 fn get_start{
+	start=`{echo $start | sed 's/[^0-9]//g'}
 	if(~ $#start 0)
 		start=1
 }
 
 fn get_stop{
+	stop=`{echo $stop | sed 's/[^0-9]//g'}
 	if(~ $#stop 0)
 		stop=`{echo $start^+^$posts_per_page | bc}
 }
@@ -271,4 +274,24 @@ fn edit_from{
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
 	</form><br>'
+}
+
+fn display_prevnext{
+	# TODO: fix prev/next/posts_per_page
+	if(test $stop -gt `{echo 1+^$posts_per_page | bc}){
+		nprev=`{echo $start^-1-^$posts_per_page | bc}
+		prev='<span>
+		<a href="'$base_url^$img_url'?tags='$"tags'&start='$"nprev'">prev</a> |
+		</span>'
+	}
+	if(test $#posts -gt $posts_per_page){
+		nnext=`{echo $stop^+1 | bc}
+		next='<span>
+		<a href="'$base_url^$img_url'?tags='$"tags'&start='$"nnext'">next</a>
+		</span>'
+	}
+	echo '<div id="page_list">
+	'$"prev'
+	'$"next'
+	</div>'
 }
