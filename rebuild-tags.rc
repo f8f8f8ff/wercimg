@@ -1,0 +1,5 @@
+rm tags
+for (i in `{ls -p src}){
+	for (tag in `{ls -p src/$i/tags})
+		echo $i'tags/'$tag >>tags
+}

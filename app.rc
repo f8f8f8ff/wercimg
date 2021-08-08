@@ -135,6 +135,7 @@ fn edit_post {
 
 	# TAGS
 	rm -f $a_dir/tags/*
+	sed '/^'$a_id'\//d' $img_root/tags >$img_root/tags
 	if (! ~ $#post_arg_tags 0){
 		a_tags=`{echo $"post_arg_tags | sed 's/[^A-Za-z0-9_\- ]//g'}
 		# put tags into list
@@ -176,6 +177,12 @@ fn edit_post {
 	}
 
 	post_redirect $base_url^$img_url
+}
+
+fn delete_post{
+	a_dir=$img_root/src/$a_id
+	rm -r $"a_dir
+	sed '/^'$a_id'\//d' $img_root/tags >$img_root/tags
 }
 
 fn check_img_url{
