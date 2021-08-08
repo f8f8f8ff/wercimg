@@ -20,29 +20,22 @@ fn img_init {
 		}
 		if (~ $REQUEST_METHOD POST ) {
 			parse_post_args
-			if (! ~ $#post_arg_image 0) {
-				#echo 'Content-type: text/plain'; echo ''; exec echo $post_arg_image
-				#edit_post
-				check_img_url
+			if (~ $a_func new_post){
+				if (check_user && ! ~ $#logged_user 0)
+					check_img_url
+			}
+			if (~ $a_func edit_post delete_post){
+				if (check_user && ! ~ $#logged_user 0){
+					switch($a_func){
+					case edit_post
+						edit_post
+					case delete_post
+						delete_post
+					}
+				}
 			}
 		}
 	}
-
-	if (~ $a_func new_post){
-		if (check_user && ! ~ $#logged_user 0)
-			check_img_url
-	}
-	if (~ $a_func edit_post delete_post){
-		if (check_user && ! ~ $#logged_user 0){
-			switch($a_func){
-			case edit_post
-				edit_post
-			case delete_post
-				delete_post
-			}
-		}
-	}
-
 	get_start
 	get_stop
 	get_tags
@@ -101,8 +94,9 @@ fn display_image_gallery{
 		<span id="post_date">'
 		cat $a_dir/date
 		echo '</span>'
-		echo '</div>'
+		print_edit_buttons
 		print_caption
+		echo '</div>'
 		echo '<div id="post_img">'
 		print_img
 		echo '</div>
@@ -111,7 +105,16 @@ fn display_image_gallery{
 	}
 }
 
+fn print_edit_buttons{
+	if (check_user && ! ~ $#logged_user 0){
+		edit='<a href="'$img_url'?a_id='$"a_id'&id='$"a_id'">edit</a>'
+		delete='<a href="'$img_url'">delete</a>'
+		echo '<br><span id="post_edit">('$"edit', '$"delete')</span>'
+	}
+}
+
 fn edit_post {
+	umask 002
 	if (~ $#a_id 0){
 		a_id=`{echo `{ls -p $img_root/src | sort -n | tail -1}^+1 | bc}
 		if (~ $#a_id 0)
@@ -127,7 +130,8 @@ fn edit_post {
 	mkdir -p $a_dir/img $a_dir/tags
 
 	# DATE
-	date >$a_dir/date
+	if (~ $a_func new_post)
+		date >$a_dir/date
 
 	# TAGS
 	rm -f $a_dir/tags/*
@@ -155,7 +159,7 @@ fn edit_post {
 	echo $"post_arg_link >$a_dir/link
 
 	# IMAGE
-	if (! ~ $#post_arg_image 0){
+	if (! ~ $#post_arg_image 0 && ~ $a_func new_post){
 		a_img=`{echo $"post_arg_image | sed 's/\&.*$//g'}
 		dprint a_img: $"a_img
 		img=$a_dir/img/^`{date -n}^.^`{echo $"a_img |
@@ -176,7 +180,7 @@ fn edit_post {
 
 fn check_img_url{
 	if (! ~ $#post_arg_image 0){
-		post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
+		#post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
 		url_content_type=`{curl $"post_arg_image -I -s | grep -i 'content-type: image'}
 		#echo 'Content-type: text/plain'; echo ''; exec echo yes $#url_content_type $"url_content_type
 		if (! ~ $#url_content_type 0) {
@@ -314,8 +318,10 @@ fn display_edit_form{
 	}
 
 	echo '<form action="'$img_url'" method="post">
-		<input type="hidden" name="a_func" value="'$"name'">
-		<table>'
+		<input type="hidden" name="a_func" value="'$"name'">'
+	if (~ $name edit_post)
+		echo '<input type="hidden" name="a_id" value="'$"a_id'">'
+	echo '<table>'
 	if (~ $name new_post)
 		echo '<tr><td>image:</td><td><input type="text" name="image" required></td></tr>'
 	echo '<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>

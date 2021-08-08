@@ -5,4 +5,3 @@
 % }
 % display_image_gallery
 % display_prevnext
-
