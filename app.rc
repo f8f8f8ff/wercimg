@@ -18,11 +18,26 @@ fn img_init {
 			handler_body_main='img_display_gallery'
 		}
 		if (~ $REQUEST_METHOD POST ) {
-			#now=`{ date -n }
+			parse_post_args
 			if (! ~ $#post_arg_image 0) {
 				#echo 'Content-type: text/plain'; echo ''; exec echo $post_arg_image
 				#edit_post
 				check_img_url
+			}
+		}
+	}
+
+	if (~ $a_func new_post){
+		if (check_user && ! ~ $#logged_user 0)
+			check_img_url
+	}
+	if (~ $a_func edit_post delete_post){
+		if (check_user && ! ~ $#logged_user 0){
+			switch($a_func){
+			case edit_post
+				edit_post
+			case delete_post
+				delete_post
 			}
 		}
 	}
@@ -36,6 +51,7 @@ fn img_display_gallery {
 	echo '<article>'
 	if (check_user && ! ~ $#logged_user 0){
 		echo '<form action="'$img_url'" method="post">
+			<input type="hidden" name="a_func" value="new_post">
 			<table>
 			<tr><td>image:</td><td><input type="text" name="image" required></td></tr>
 			<tr><td>link:</td><td><input type="text" name="link" ></td></tr>
@@ -182,6 +198,13 @@ fn parse_get_args{ # stolen from barf
 		tags=$get_arg_tags
 }
 
+fn parse_post_args{
+	if (! ~ $#post_arg_a_func 0)
+		a_func=$post_arg_a_func
+	if (! ~ $#post_arg_a_id 0)
+		a_id=$post_arg_a_id
+}
+
 fn get_post_list{
 	if (~ $id [0-9]*)
 		posts=$id
@@ -267,6 +290,7 @@ fn edit_from{
 	}
 
 	echo '<form action="'$img_url'" method="post">
+		<input type="hidden" name="a_func" value="edit_post">
 		<table>
 		<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>
 		<tr><td>caption:</td><td><input type="text" name="caption" value="'$"a_caption'"></td></tr>
