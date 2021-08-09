@@ -173,7 +173,7 @@ fn edit_post {
 		thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
 		dprint a_img: $"a_img
 		curl $"a_img -s -o $img
-		convert $img -resize 500x600 $thumb
+		convert $img -resize '500x600>' $thumb
 		rm `{ls $a_dir/img/small* | sed -n '2,$p'}
 	}
 
