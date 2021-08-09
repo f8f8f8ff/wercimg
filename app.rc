@@ -33,6 +33,7 @@ fn img_init {
 				case delete_post
 					delete_post
 				}
+				post_redirect $img_url
 			}
 		}
 	}
