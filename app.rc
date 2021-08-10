@@ -42,7 +42,10 @@ fn img_init {
 	get_start
 	get_stop
 	get_tags
-	pageTitle=`{echo $siteTitle /$tags/}
+	if (~ $#id 0)
+		pageTitle=`{echo $siteTitle /$tags/}
+	if not
+		pageTitle=`{echo $siteTitle '#'$id}
 }
 
 fn img_display_gallery {
