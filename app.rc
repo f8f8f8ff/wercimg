@@ -299,10 +299,11 @@ fn get_tags{
 
 fn print_link{
 	if (test -f $a_dir/link){
-		link=`{cat $a_dir/link}
-		if (~ $#link 0)
-			link=$img_url^'?id='^$a_id
-		echo '<span id="post_link"><a href="'$"link'" target="_b">link</a></span> |'
+		ext_link=`{cat $a_dir/link}
+		if (! ~ $#ext_link 0)
+			ext_link=`{echo '(<a href="'$"ext_link'" target="_b">ext</a>)'}
+		int_link=$img_url^'?id='^$a_id
+		echo '<span id="post_link">'$"ext_link' <a href="'$"int_link'">link</a></span> |'
 	}
 }
 
