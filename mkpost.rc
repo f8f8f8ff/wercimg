@@ -1,0 +1,102 @@
+#!/usr/local/plan9/bin/rc
+
+# usage: /var/www/werc/apps/img/mkpost.rc $file -t "tag tag2 tag3" -l "link" -c "a caption" [-b "/var/www/werc/sites/localhost"]
+# set img_root using -b flag or by running in the img_root directory.
+
+path=( $PLAN9/bin $path )
+base=.
+
+file=()
+tags=()
+caption=()
+link=()
+
+file=$1
+shift
+
+while (! ~ $#* 0) { # while num of arguments is not 0
+	switch($1) {
+		case -t
+			shift
+			tags=$1
+		case -c
+			shift
+			caption=$1
+		case -l
+			shift
+			link=$1
+		case -b
+			shift
+			base=$1
+	}
+	shift
+}
+
+fn new_post {
+	umask 002
+	a_id=`{echo `{ls -p $img_root/src | sort -n | tail -1}^+1 | bc}
+	if (~ $#a_id 0)
+		a_id=1
+	while (test -d $img_root/src/$a_id)
+		a_id=`{echo $a_id^+1 | bc}
+	a_dir=$img_root/src/$a_id
+
+	mkdir -p $a_dir/img $a_dir/tags
+
+	# DATE
+	date >$a_dir/date
+
+	# TAGS
+	rm -f $a_dir/tags/*
+	{echo ',x/^'$a_id'\/.*\n/d'; echo w; echo q} | sam -d $img_root/tags >[2]/dev/null
+	if (! ~ $#tags 0){
+		a_tags=`{echo $"tags | sed 's/[^A-Za-z0-9_\- ]//g'}
+		# put tags into list
+		ifs=' '{a_tags=`{echo -n $a_tags}}
+		{
+			t=1
+			while (test $t -le $#a_tags){
+				# create tag files
+				>$a_dir/tags/$a_tags($t)
+				t=`{echo $t^+1 | bc}
+			}
+		}
+		for (i in $a_tags)
+			echo $a_id'/tags/'$i >>$img_root/tags
+	}
+	#update_tags
+
+	# CAPTION
+	echo $"caption >$a_dir/caption
+
+	# LINK
+	echo $"link >$a_dir/link
+
+	# IMAGE
+	img=$a_dir/img/^`{date -n}^.^`{echo $"file |
+		sed 's/^.*\.(gif|GIF)$/gif/g;
+				s/^.*\.(jpg|jpeg|JPG|JPEG)$/jpg/g;
+				s/^.*\.(png|PNG)$/png/g;
+				s/^.*\.(tif|tiff|TIF|TIFF)$/tif/g'
+	}
+	thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
+	cp $file $img
+	convert $img -auto-orient -resize '500x600>' $thumb
+	rm `{ls $a_dir/img/small* | sed -n '2,$p'}
+
+	chown -R :www-data $a_dir
+}
+
+fn update_tags{
+	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
+	cat $img_root/taglist | head -n 20 |
+		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
+		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
+}
+
+img_root=$base
+
+if (test -s $file)
+	new_post
+if not
+	echo empty file!
