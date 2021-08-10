@@ -42,6 +42,7 @@ fn img_init {
 	get_start
 	get_stop
 	get_tags
+	pageTitle=`{echo $siteTitle /$tags/}
 }
 
 fn img_display_gallery {
