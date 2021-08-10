@@ -1,3 +1,6 @@
+<div id="tag_header">
+<p id="current_tag">/%($tags%)/</p>
+</div>
 % if (check_user && ! ~ $#logged_user 0){
 % 	if (! ~ $#a_id 0)
 		<h3>edit post</h3>
