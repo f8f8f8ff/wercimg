@@ -153,6 +153,7 @@ fn edit_post {
 		for (i in $a_tags)
 			echo $a_id'/tags/'$i >>$img_root/tags
 	}
+	update_tags
 
 	# CAPTION
 	# TODO: escape html in caption + link?
@@ -181,11 +182,19 @@ fn edit_post {
 	post_redirect $base_url^$img_url
 }
 
+fn update_tags{
+	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
+	cat $img_root/taglist | head -n 16 |
+		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
+		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
+}
+
 fn delete_post{
 	a_dir=$img_root/src/$a_id
 	if (test -d $a_dir){
 		rm -rf $"a_dir &&
 		{echo ',x/^'$a_id'\/.*\n/d'; echo w; echo q} | sam -d $img_root/tags >[2]/dev/null
+		update_tags
 	}
 }
 
@@ -314,6 +323,10 @@ fn print_img{
 			a_thumb=$a_img
 	echo '<a href="'$img_url'src/'$a_id'/img/'$a_img'" target="_b">
 	<img src="'$img_url'src/'$a_id'/img/'$a_thumb'" border="0"></a>'
+}
+
+fn print_header_tags{
+	cat $img_root/headertags
 }
 
 fn display_edit_form{

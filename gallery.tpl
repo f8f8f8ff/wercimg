@@ -1,5 +1,8 @@
 <div id="tag_header">
 <p id="current_tag">/%($tags%)/</p>
+<p>
+% print_header_tags
+</p>
 </div>
 % if (check_user && ! ~ $#logged_user 0){
 % 	if (! ~ $#a_id 0)
