@@ -63,7 +63,6 @@ fn img_display_gallery {
 		</form><br>'
 	}
 
-	# TODO: add edit button/form to delete, edit tags, caption, link
 	get_post_list
 	for (i in `{seq 1 $#posts}){
 		a_id=$posts($i)
@@ -366,7 +365,6 @@ fn display_edit_form{
 }
 
 fn display_prevnext{
-	# TODO: fix prev/next/posts_per_page
 	if(test $stop -gt `{echo 1+^$posts_per_page | bc}){
 		nprev=`{echo $start^-1-^$posts_per_page | bc}
 		prev='<span>
