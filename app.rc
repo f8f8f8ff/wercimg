@@ -1,6 +1,8 @@
 fn conf_enable_img {
 	if (~ $#posts_per_page 0)
 		posts_per_page=5
+	if (~ $#max_header_tags 0)
+		max_header_tags=20
 	img_url=$conf_wd # /
 	img_root=`{pwd} # /var/www/werc/sites/server.local
 	#dprint IMG_ROOT $img_root
@@ -184,7 +186,7 @@ fn edit_post {
 
 fn update_tags{
 	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
-	cat $img_root/taglist | head -n 16 |
+	cat $img_root/taglist | head -n $max_header_tags |
 		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
 		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
 }
