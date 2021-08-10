@@ -301,7 +301,7 @@ fn print_link{
 	if (test -f $a_dir/link){
 		link=`{cat $a_dir/link}
 		if (~ $#link 0)
-			link=$img_url?id=$a_id
+			link=$img_url^'?id='^$a_id
 		echo '<span id="post_link"><a href="'$"link'" target="_b">link</a></span> |'
 	}
 }
