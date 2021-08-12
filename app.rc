@@ -134,14 +134,25 @@ fn update_tags{
 # TODO integrate this into the edit_post function
 fn check_img_url{
 	if (! ~ $#post_arg_image 0){
-		#post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
-		url_content_type=`{curl $"post_arg_image -I -s | grep -i 'content-type: image'}
-		#echo 'Content-type: text/plain'; echo ''; exec echo yes $#url_content_type $"url_content_type
-		if (! ~ $#url_content_type 0) {
-			edit_post
+		url_headers=`{curl $"post_arg_image -I -s | tr A-Z a-z | tr -d '\x0d' |
+			grep -i -e 'content-type: image' -e 'content-length: ' |
+			sed 's/^content-type: image\///g; s/^content-length: //g'}
+		url_content_type=`{echo $url_headers(1) |
+			sed 's/^.*\.(gif|GIF)$/gif/g;
+				s/^.*\.(jpg|jpeg|JPG|JPEG)$/jpg/g;
+				s/^.*\.(png|PNG)$/png/g;
+				s/^.*\.(tif|tiff|TIF|TIFF)$/tif/g'}
+		url_content_length=$url_headers(2)
+
+		if (~ $#url_content_type 0) {
+			echo 'Content-type: text/plain'; echo ''; exec echo no image at url: $"post_arg_image
+		}
+		if not if (test $url_content_length -gt 31457280) { #31457280 bytes = 30 mb
+			echo 'Content-type: text/plain'; echo ''; exec echo file size exceeds 30mb
 		}
 		if not {
-			echo 'Content-type: text/plain'; echo ''; exec echo no image at url: $"post_arg_image
+			#echo 'Content-type: text/plain'; echo ''; exec echo $url_content_type $url_content_length
+			edit_post
 		}
 	}
 	if not{
