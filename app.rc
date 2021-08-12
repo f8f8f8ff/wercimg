@@ -98,18 +98,15 @@ fn edit_post {
 	# IMAGE
 	if (! ~ $#post_arg_image 0 && ~ $a_func new_post){
 		a_img=`{echo $"post_arg_image | sed 's/\&.*$//g'}
-		dprint a_img: $"a_img
-		img=$a_dir/img/^`{date -n}^.^`{echo $"a_img |
-			sed 's/^.*\.(gif|GIF)$/gif/g;
-				s/^.*\.(jpg|jpeg|JPG|JPEG)$/jpg/g;
-				s/^.*\.(png|PNG)$/png/g;
-				s/^.*\.(tif|tiff|TIF|TIFF)$/tif/g'
-		}
+		#dprint a_img: $"a_img
+		img=$a_dir/img/^`{date -n}^.^$url_content_type
 		thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
-		dprint a_img: $"a_img
+		#dprint a_img: $"a_img
 		curl $"a_img -s -o $img
 		convert $img -auto-orient -resize '500x600>' $thumb
-		rm `{ls $a_dir/img/small* | sed -n '2,$p'}
+		if (test `{du $img | awk '{print $1}'} -le `{du $thumb | awk '{print $1}'})
+			rm $thumb
+		rm `{ls $a_dir/img/small* | sed -n '2,$p'} >[2]/dev/null
 	}
 
 	post_redirect $base_url^$img_url
@@ -138,10 +135,10 @@ fn check_img_url{
 			grep -i -e 'content-type: image' -e 'content-length: ' |
 			sed 's/^content-type: image\///g; s/^content-length: //g'}
 		url_content_type=`{echo $url_headers(1) |
-			sed 's/^.*\.(gif|GIF)$/gif/g;
-				s/^.*\.(jpg|jpeg|JPG|JPEG)$/jpg/g;
-				s/^.*\.(png|PNG)$/png/g;
-				s/^.*\.(tif|tiff|TIF|TIFF)$/tif/g'}
+			sed 's/^(gif|GIF)$/gif/g;
+				s/^(jpg|jpeg|JPG|JPEG)$/jpg/g;
+				s/^(png|PNG)$/png/g;
+				s/^(tif|tiff|TIF|TIFF)$/tif/g'}
 		url_content_length=$url_headers(2)
 
 		if (~ $#url_content_type 0) {
@@ -272,7 +269,7 @@ fn print_tags{
 
 fn print_img{
 	a_img=`{ls -p $a_dir/img/[0-9]*}
-	a_thumb=`{ls -p $a_dir/img/small*} #| sed 1q
+	a_thumb=`{ls -p $a_dir/img/small* >[2]/dev/null} #| sed 1q
 	if(! ~ $#a_img 0)
 		if(~ $#a_thumb 0)
 			a_thumb=$a_img
