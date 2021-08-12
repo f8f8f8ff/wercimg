@@ -102,7 +102,7 @@ fn edit_post {
 		curl $"a_img -s -o $img
 		if (~ $url_content_type gif) {
 			thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.gif
-			gifsicle --optimize --colors=32 --resize-fit 500x600 $img '#0-9' >$thumb
+			gifsicle --optimize --colors 32 --resize-fit 500x600 $img '#0-9' >$thumb
 		}
 		if not {
 			thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
