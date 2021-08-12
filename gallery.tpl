@@ -11,6 +11,5 @@
 		<h3>new post</h3>
 % 	display_edit_form
 % }
-<style>#post_img img { max-width: 500px; max-height: 600px; }</style>
 % display_image_gallery
 % display_prevnext
