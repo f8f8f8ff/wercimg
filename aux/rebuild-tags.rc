@@ -1,5 +1,53 @@
-rm tags
-for (i in `{ls -p src}){
-	for (tag in `{ls -p src/$i/tags})
-		echo $i'tags/'$tag >>tags
+#!/usr/local/plan9/bin/rc
+
+path=( $PLAN9/bin $path )
+base=.
+
+img_root=$base
+max_header_tags=30
+
+from_tag=()
+to_tag=()
+
+while (! ~ $#* 0) {
+	switch ($1) {
+		case -rename
+			shift
+			from_tag=$1
+			shift
+			to_tag=$1
+	}
+	shift
 }
+
+if (! ~ 0 $#from_tag $#to_tag){
+	umask 002
+	posts=`{grep -e '^.*\/'$from_tag'$' $img_root/tags |
+		awk -F '/' '{print $1;}' | sort -nr | uniq}
+	if (! ~ $posts [0-9]*)
+		posts=()
+	for (i in `{seq 1 $#posts}){
+		a_id=$posts($i)
+		a_dir=$img_root/src/$a_id
+		mv $a_dir/tags/$from_tag $a_dir/tags/$to_tag
+	}
+}
+
+fn rebuild_tags{
+	umask 002
+	rm tags
+	for (i in `{ls -p src}){
+		for (tag in `{ls -p src/$i/tags})
+			echo $i'/tags/'$tag >>tags
+	}
+}
+
+fn update_tags{
+	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
+	cat $img_root/taglist | head -n $max_header_tags |
+		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
+		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
+}
+
+rebuild_tags
+#update_tags
