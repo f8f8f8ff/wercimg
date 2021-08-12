@@ -1,0 +1,13 @@
+article {
+    font-size: 12pt;
+    font-family: Helvetica, Verdana, Arial, 'Liberation Sans', FreeSans, sans-serif;
+    flex-basis: 100%;
+    max-width: 80em;
+    padding-left: 0em;
+}
+
+p#post_caption {
+    font-style: italic;
+    padding-left: 1em;
+    padding-right: 1em;
+}
