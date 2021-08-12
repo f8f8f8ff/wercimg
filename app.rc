@@ -17,7 +17,6 @@ fn img_init {
 				load_get_args
 				parse_get_args
 			}
-			#handler_body_main='img_display_gallery'
 			handler_body_main=(tpl_handler `{get_lib_file img/gallery.tpl apps/img/gallery.tpl})
 		}
 		if (~ $REQUEST_METHOD POST ) {
@@ -46,77 +45,6 @@ fn img_init {
 		pageTitle=`{echo $siteTitle /$tags/}
 	if not
 		pageTitle=`{echo $siteTitle '#'$id}
-}
-
-fn img_display_gallery {
-	echo '<article>'
-	if (check_user && ! ~ $#logged_user 0){
-		echo '<form action="'$img_url'" method="post">
-			<input type="hidden" name="a_func" value="new_post">
-			<table>
-			<tr><td>image:</td><td><input type="text" name="image" required></td></tr>
-			<tr><td>link:</td><td><input type="text" name="link" ></td></tr>
-			<tr><td>caption:</td><td><input type="text" name="caption" ></td></tr>
-			<tr><td>tags:</td><td><input type="text" name="tags" ></td>
-			<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
-			</table>
-		</form><br>'
-	}
-
-	get_post_list
-	for (i in `{seq 1 $#posts}){
-		a_id=$posts($i)
-		a_dir=$img_root/src/$a_id
-		echo '<div id="post">
-		<div id="post_meta">'
-		print_link
-		print_tags
-		echo ' |
-		<span id="post_date">'
-		cat $a_dir/date
-		echo '</span>'
-		echo '</div>'
-		print_caption
-		echo '<div id="post_img">'
-		print_img
-		echo '</div>
-		</div>
-		<br>'
-	}
-	display_prevnext
-	echo '</article>'
-}
-
-fn display_image_gallery{
-	get_post_list
-	for (i in `{seq 1 $#posts}){
-		a_id=$posts($i)
-		a_dir=$img_root/src/$a_id
-		echo '<div id="post">
-		<div id="post_meta">'
-		print_link
-		print_tags
-		echo ' |
-		<span id="post_date">'
-		cat $a_dir/date
-		echo '</span>'
-		print_edit_buttons
-		print_caption
-		echo '</div>'
-		echo '<div id="post_img">'
-		print_img
-		echo '</div>
-		</div>
-		<br>'
-	}
-}
-
-fn print_edit_buttons{
-	if (check_user && ! ~ $#logged_user 0){
-		edit='<a href="'$img_url'?a_id='$"a_id'&id='$"a_id'">edit</a>'
-		delete='<a href="'$img_url'?a_id='$"a_id'&a_func=delete_post">delete</a>'
-		echo '<br><span id="post_edit">('$"edit', '$"delete')</span>'
-	}
 }
 
 fn edit_post {
@@ -187,13 +115,6 @@ fn edit_post {
 	post_redirect $base_url^$img_url
 }
 
-fn update_tags{
-	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
-	cat $img_root/taglist | head -n $max_header_tags |
-		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
-		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
-}
-
 fn delete_post{
 	a_dir=$img_root/src/$a_id
 	if (test -d $a_dir){
@@ -203,6 +124,14 @@ fn delete_post{
 	}
 }
 
+fn update_tags{
+	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
+	cat $img_root/taglist | head -n $max_header_tags |
+		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
+		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
+}
+
+# TODO integrate this into the edit_post function
 fn check_img_url{
 	if (! ~ $#post_arg_image 0){
 		#post_arg_image=`{echo $"post_arg_image | sed 's/\&.*$//g'}
@@ -234,7 +163,6 @@ fn load_get_args {
 		pair=()
 	}
 }
-
 
 fn parse_get_args{ # stolen from barf
 	if(! ~ $#get_arg_a_func 0)
@@ -300,6 +228,14 @@ fn get_tags{
 		tags=all
 }
 
+fn print_edit_buttons{
+	if (check_user && ! ~ $#logged_user 0){
+		edit='<a href="'$img_url'?a_id='$"a_id'&id='$"a_id'">edit</a>'
+		delete='<a href="'$img_url'?a_id='$"a_id'&a_func=delete_post">delete</a>'
+		echo '<br><span id="post_edit">('$"edit', '$"delete')</span>'
+	}
+}
+
 fn print_link{
 	if (test -f $a_dir/link){
 		ext_link=`{cat $a_dir/link}
@@ -362,6 +298,30 @@ fn display_edit_form{
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
 	</form><br>'
+}
+
+fn display_image_gallery{
+	get_post_list
+	for (i in `{seq 1 $#posts}){
+		a_id=$posts($i)
+		a_dir=$img_root/src/$a_id
+		echo '<div id="post">
+		<div id="post_meta">'
+		print_link
+		print_tags
+		echo ' |
+		<span id="post_date">'
+		cat $a_dir/date
+		echo '</span>'
+		print_edit_buttons
+		print_caption
+		echo '</div>'
+		echo '<div id="post_img">'
+		print_img
+		echo '</div>
+		</div>
+		<br>'
+	}
 }
 
 fn display_prevnext{
