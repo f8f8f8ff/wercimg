@@ -104,7 +104,7 @@ fn edit_post {
 		#dprint a_img: $"a_img
 		curl $"a_img -s -o $img
 		convert $img -auto-orient -resize '500x600>' $thumb
-		if (test `{du $img | awk '{print $1}'} -le `{du $thumb | awk '{print $1}'})
+		if (test `{du $img | awk '{print $1}' | tr -d 'a-z'} -le `{du $thumb | awk '{print $1}' | tr -d 'a-z'})
 			rm $thumb
 		rm `{ls $a_dir/img/small* | sed -n '2,$p'} >[2]/dev/null
 	}
