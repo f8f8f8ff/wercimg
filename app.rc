@@ -98,15 +98,19 @@ fn edit_post {
 	# IMAGE
 	if (! ~ $#post_arg_image 0 && ~ $a_func new_post){
 		a_img=`{echo $"post_arg_image | sed 's/\&.*$//g'}
-		#dprint a_img: $"a_img
 		img=$a_dir/img/^`{date -n}^.^$url_content_type
-		thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
-		#dprint a_img: $"a_img
 		curl $"a_img -s -o $img
-		convert $img -auto-orient -resize '500x600>' $thumb
+		if (~ $url_content_type gif) {
+			thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.gif
+			gifsicle --optimize --colors=32 --resize-fit 500x600 $img '#0-9' >$thumb
+		}
+		if not {
+			thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.png
+			convert $img -auto-orient -resize '500x600>' $thumb
+		}
 		if (test `{du $img | awk '{print $1}' | tr -d 'a-z'} -le `{du $thumb | awk '{print $1}' | tr -d 'a-z'})
 			rm $thumb
-		rm `{ls $a_dir/img/small* | sed -n '2,$p'} >[2]/dev/null
+		# rm `{ls $a_dir/img/small* | sed -n '2,$p'} >[2]/dev/null
 	}
 
 	post_redirect $base_url^$img_url
