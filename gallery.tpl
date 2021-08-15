@@ -10,6 +10,13 @@
 %	if not
 		<h3>new post</h3>
 % 	display_edit_form
+<form action="%($img_url%)" method="post">
+	<select name="a_func" required>
+		<option value=""></option>
+		<option value="refresh_tags">refresh_tags</option>
+	<input type="submit" name="submit" value="submit">
+</form>
+<br>
 % }
 % display_image_gallery
 % display_prevnext

@@ -26,13 +26,16 @@ fn img_init {
 					check_img_url
 			}
 		}
-		if (~ $a_func edit_post delete_post){
+		if (~ $a_func edit_post delete_post refresh_tags){
 			if (check_user && ! ~ $#logged_user 0){
 				switch($a_func){
 				case edit_post
 					edit_post
 				case delete_post
 					delete_post
+				case refresh_tags
+					rebuild_tags
+					update_tags
 				}
 				post_redirect $img_url
 			}
@@ -125,7 +128,17 @@ fn delete_post{
 	}
 }
 
+fn rebuild_tags{
+	umask 002
+	rm $img_root/tags
+	for (i in `{ls -p $img_root/src}){
+		for (tag in `{ls -p $img_root/src/$i/tags})
+			echo $i'/tags/'$tag >>$img_root/tags
+	}
+}
+
 fn update_tags{
+	umask 002
 	cat $img_root/tags | cut -f 3 -d '/' | sort | uniq -c | sort -nr | awk '{print $1 " " $2}' >$img_root/taglist
 	cat $img_root/taglist | head -n $max_header_tags |
 		#awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2" ("$1")</a>"}' >$img_root/headertags
