@@ -200,6 +200,8 @@ fn parse_get_args{ # stolen from barf
 		start=$get_arg_start
 	if(! ~ $#get_arg_stop 0)
 		stop=$get_arg_stop
+	if(! ~ $#get_arg_page 0)
+		page=$get_arg_page
 	if(! ~ $#get_arg_tags 0)
 		tags=$get_arg_tags
 }
@@ -238,6 +240,11 @@ fn get_post_list{
 
 fn get_start{
 	start=`{echo $start | sed 's/[^0-9]//g'}
+	if(! $#page 0){
+		if (test $page -le 0)
+			page=1
+		start=`{echo '('$page-1')'*$posts_per_page+1 | bc}
+	}
 	if(~ $#start 0)
 		start=1
 }
@@ -358,6 +365,7 @@ fn display_prevnext{
 	}
 	if(test $#posts -gt $posts_per_page){
 		nnext=`{echo $stop^+1 | bc}
+		npage=`{echo $page^+1 | bc}
 		next='<span>
 		<a href="'$base_url^$img_url'?tags='$"tags'&start='$"nnext'">next</a>
 		</span>'
