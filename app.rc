@@ -322,7 +322,7 @@ fn display_edit_form{
 		<tr><td>tags:</td><td><input type="text" name="tags" value="'$"a_tags'"></td>
 		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
 		</table>
-	</form><br>'
+	</form>'
 }
 
 fn display_image_gallery{
