@@ -13,3 +13,6 @@ p#post_caption {
 img { max-width: 100% !important; }
 #post_img { max-width: 500px; max-height 600px; }
 #post_img img { max-height: 100%; }
+article a { text-decoration: none; color: blue; }
+article a:hover { background: blue; color: white; }
+article a img { vertical-align: bottom; }
