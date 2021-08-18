@@ -11,7 +11,7 @@
 		<h3>new post</h3>
 % 	display_edit_form
 <p>uguu.se upload</p>
-<form enctype="multipart/form-data" method="post" action="https://uguu.se/upload.php?output=html">
+<form enctype="multipart/form-data" method="post" action="https://uguu.se/upload.php?output=html" target="_b">
 	<input type="file" name="files[]" multiple="" data-max-size="128MiB">
 	<input type="submit" value="upload">
 </form>
