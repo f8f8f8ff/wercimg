@@ -10,6 +10,12 @@
 %	if not
 		<h3>new post</h3>
 % 	display_edit_form
+<p>uguu.se upload</p>
+<form enctype="multipart/form-data" method="post" action="https://uguu.se/upload.php?output=html">
+	<input type="file" name="files[]" multiple="" data-max-size="128MiB">
+	<input type="submit" value="upload">
+</form>
+<p>other functions</p>
 <form action="%($img_url%)" method="post">
 	<select name="a_func" required>
 		<option value=""></option>
