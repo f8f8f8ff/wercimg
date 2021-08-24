@@ -85,6 +85,8 @@ fn new_post {
 	rm `{ls $a_dir/img/small* | sed -n '2,$p'}
 
 	chown -R :www-data $a_dir
+
+	echo $file done
 }
 
 fn update_tags{
