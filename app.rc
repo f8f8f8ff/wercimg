@@ -22,8 +22,13 @@ fn img_init {
 		if (~ $REQUEST_METHOD POST ) {
 			parse_post_args
 			if (~ $a_func new_post){
-				if (check_user && ! ~ $#logged_user 0)
-					check_img_url
+				dprint NEW_POST - $post_arg_image - $post_arg_upload - $post_arg_tags
+				if (check_user && ! ~ $#logged_user 0) {
+					if (! ~ $#post_arg_image 0)
+						check_img_url
+					if not
+						check_upload
+				}
 			}
 		}
 		if (~ $a_func edit_post delete_post refresh_tags){
@@ -99,11 +104,16 @@ fn edit_post {
 	echo $"post_arg_link >$a_dir/link
 
 	# IMAGE
-	if (! ~ $#post_arg_image 0 && ~ $a_func new_post){
+	if (~ $a_func new_post && ! ~ $#post_arg_image 0 || ! ~ $#post_arg_upload 0){
 		a_img=`{echo $"post_arg_image | sed 's/\&.*$//g'}
-		img=$a_dir/img/^`{date -n}^.^$url_content_type
-		curl $"a_img -s -o $img
-		if (~ $url_content_type gif) {
+		img=$a_dir/img/^`{date -n}^.^$image_file_type
+
+		if (! ~ $#post_arg_image 0)
+			curl $"a_img -s -o $img
+		if not
+			mv /tmp/werc_file.*.data $img
+
+		if (~ $image_file_type gif) {
 			thumb=$a_dir/img/small.^`{basename $img | sed 's/\..*$//g'}^.gif
 			gifsicle --optimize --colors 32 --resize-fit 500x600 $img '#0-9' >$thumb
 		}
@@ -145,27 +155,48 @@ fn update_tags{
 		awk '{print "<a href=\"'$img_url'?tags="$2"\" class=\"header_tag\">"$2"</a>"}' >$img_root/headertags
 }
 
+fn check_upload{
+	dprint CHECK_UPLOAD start
+	dprint CHECK_UPLOAD `{which file}
+	if (! ~ $#post_arg_upload 0){
+		image_file_type=`{/usr/bin/file /tmp/werc_file.*.data | sed 's/ image data.*//g; s/^.*: //g' | tr A-Z a-z}
+		dprint CHECK_UPLOAD image_file_type: - $image_file_type -
+		image_file_type=`{echo $image_file_type | sed 's/^jpeg$/jpg/g; s/^tiff$/tif/g'} # | grep 'jpg\|png\|gif\|tif'
+		dprint CHECK_UPLOAD image_file_type: $image_file_type
+		if (! ~ $#image_file_type 0){
+			#echo 'Content-type: text/plain'; echo ''; exec echo $image_file_type $post_arg_upload
+			edit_post
+		}
+		if not {
+			echo 'Content-type: text/plain'; echo ''; exec echo file type not supported
+		}
+	}
+	if not {
+		echo 'Content-type: text/plain'; echo ''; exec echo no file uploaded
+	}
+}
+
 # TODO integrate this into the edit_post function
 fn check_img_url{
 	if (! ~ $#post_arg_image 0){
 		url_headers=`{curl $"post_arg_image -I -s | tr A-Z a-z | tr -d '\x0d' |
 			grep -i -e 'content-type: image' -e 'content-length: ' |
 			sed 's/^content-type: image\///g; s/^content-length: //g'}
-		url_content_type=`{echo $url_headers(1) |
+		image_file_type=`{echo $url_headers(1) |
 			sed 's/^(gif|GIF)$/gif/g;
 				s/^(jpg|jpeg|JPG|JPEG)$/jpg/g;
 				s/^(png|PNG)$/png/g;
 				s/^(tif|tiff|TIF|TIFF)$/tif/g'}
 		url_content_length=$url_headers(2)
 
-		if (~ $#url_content_type 0) {
+		if (~ $#image_file_type 0) {
 			echo 'Content-type: text/plain'; echo ''; exec echo no image at url: $"post_arg_image
 		}
 		if not if (test $url_content_length -gt 31457280) { #31457280 bytes = 30 mb
 			echo 'Content-type: text/plain'; echo ''; exec echo file size exceeds 30mb
 		}
 		if not {
-			#echo 'Content-type: text/plain'; echo ''; exec echo $url_content_type $url_content_length
+			echo 'Content-type: text/plain'; echo ''; exec echo $image_file_type $url_content_length
 			edit_post
 		}
 	}
@@ -310,17 +341,18 @@ fn display_edit_form{
 		a_link=`{cat $a_dir/link}
 	}
 
-	echo '<form action="'$img_url'" method="post">
+	echo '<form action="'$img_url'" method="post" enctype="multipart/form-data">
 		<input type="hidden" name="a_func" value="'$"name'">'
 	if (~ $name edit_post)
 		echo '<input type="hidden" name="a_id" value="'$"a_id'">'
 	echo '<table>'
 	if (~ $name new_post)
-		echo '<tr><td>image:</td><td><input type="text" name="image" required></td></tr>'
+		echo '<tr><td>image:</td><td><input type="file" name="upload" accept="image/*"></td></tr>
+		<tr><td>image url:</td><td><input type="text" name="image"></td></tr>'
 	echo '<tr><td>link:</td><td><input type="text" name="link" value="'$"a_link'"></td></tr>
 		<tr><td>caption:</td><td><input type="text" name="caption" value="'$"a_caption'"></td></tr>
 		<tr><td>tags:</td><td><input type="text" name="tags" value="'$"a_tags'"></td>
-		<tr><td><input type="submit" name="submit" value="SUBMIT"</td></tr>
+		<tr><td><input type="submit" name="submit" value="SUBMIT"></td></tr>
 		</table>
 	</form>'
 }
