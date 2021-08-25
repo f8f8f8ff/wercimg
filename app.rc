@@ -3,6 +3,8 @@ fn conf_enable_img {
 		posts_per_page=5
 	if (~ $#max_header_tags 0)
 		max_header_tags=20
+	if (~ $#max_file_size 0)
+		max_file_size=31457280 #30 mb
 	img_url=$conf_wd # /
 	img_root=`{pwd} # /var/www/werc/sites/server.local
 	#dprint IMG_ROOT $img_root
@@ -156,12 +158,14 @@ fn update_tags{
 }
 
 fn check_upload{
-	dprint CHECK_UPLOAD start
-	dprint CHECK_UPLOAD `{which file}
+	dprint CHECK_UPLOAD start CONTENT_LENGTH $CONTENT_LENGTH max_file_size $max_file_size
 	if (! ~ $#post_arg_upload 0){
+		if (test $CONTENT_LENGTH -gt $max_file_size) {
+			echo 'Content-type: text/plain'; echo ''; exec echo upload size exceeds max_file_size
+		}
 		image_file_type=`{/usr/bin/file /tmp/werc_file.*.data | sed 's/ image data.*//g; s/^.*: //g' | tr A-Z a-z}
 		dprint CHECK_UPLOAD image_file_type: - $image_file_type -
-		image_file_type=`{echo $image_file_type | sed 's/^jpeg$/jpg/g; s/^tiff$/tif/g'} # | grep 'jpg\|png\|gif\|tif'
+		image_file_type=`{echo $image_file_type | sed 's/^jpeg$/jpg/g; s/^tiff$/tif/g' | grep 'jpg|png|gif|tif'}
 		dprint CHECK_UPLOAD image_file_type: $image_file_type
 		if (! ~ $#image_file_type 0){
 			#echo 'Content-type: text/plain'; echo ''; exec echo $image_file_type $post_arg_upload
@@ -192,11 +196,11 @@ fn check_img_url{
 		if (~ $#image_file_type 0) {
 			echo 'Content-type: text/plain'; echo ''; exec echo no image at url: $"post_arg_image
 		}
-		if not if (test $url_content_length -gt 31457280) { #31457280 bytes = 30 mb
-			echo 'Content-type: text/plain'; echo ''; exec echo file size exceeds 30mb
+		if not if (test $url_content_length -gt $max_file_size) {
+			echo 'Content-type: text/plain'; echo ''; exec echo file size exceeds max_file_size
 		}
 		if not {
-			echo 'Content-type: text/plain'; echo ''; exec echo $image_file_type $url_content_length
+			#echo 'Content-type: text/plain'; echo ''; exec echo $image_file_type $url_content_length
 			edit_post
 		}
 	}
