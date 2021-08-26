@@ -48,6 +48,8 @@ fn img_init {
 			}
 		}
 	}
+	if (~ $req_path $img_url^random)
+		post_redirect $img_url?id=`{ls -p $img_root/src | shuf | head -n 1}
 	get_start
 	get_stop
 	get_tags
