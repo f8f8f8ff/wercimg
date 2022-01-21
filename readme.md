@@ -20,6 +20,12 @@ _werc/config:
 
 ## TODO
 
+- pdf support
+- 3d file support
+- any file support
+    - just show download link, size, mimetype
+- after editing post, return to the page user clicked edit on
+
 - organize app.rc: move like with like. display/print functions all together. maybe separate file.
 
 	rg+ -i TODO | grep -v readme.md: | mdlist
